@@ -4,12 +4,13 @@ from .models import User, Profile, Course, Unit, Lesson, Enrollment, Quiz, Codin
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'password']
+        fields = ['id', 'username', 'email', 'role', 'password', 'first_name', 'last_name']
         extra_kwargs = {'password': {'write_only': True}}
         
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
-        Profile.objects.create(user=user)
+        full_name = f"{user.first_name} {user.last_name}".strip()
+        Profile.objects.create(user=user, full_name=full_name)
         return user
 
 class ProfileSerializer(serializers.ModelSerializer):
