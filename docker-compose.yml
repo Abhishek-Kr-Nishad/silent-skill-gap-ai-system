@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=abhishek21_18
+      - POSTGRES_PASSWORD=21Abhishek18@
+      - POSTGRES_DB=skillgapai
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=django-insecure-dummy-key-for-development-do-not-use-in-production
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+      - DATABASE_URL=postgres://abhishek21_18:21Abhishek18%40@db:5432/skillgapai
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173
+      - JWT_SECRET=your-jwt-secret
+      - EXECUTION_SERVICE_URL=http://execution_service:5001/execute
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  ml_service:
+    build: ./ml_service
+    ports:
+      - "5000:5000"
+    environment:
+      - MODEL_PATH=models/
+
+  execution_service:
+    build: ./execution_service
+    ports:
+      - "5001:5001"
+
+volumes:
+  postgres_data:
