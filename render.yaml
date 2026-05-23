@@ -7,9 +7,9 @@ databases:
 services:
   - type: web
     name: silent_skill_gap_backend
-    env: docker
-    dockerContext: ./backend
-    dockerfilePath: ./backend/Dockerfile
+    env: image
+    image:
+      url: docker.io/YOUR_DOCKERHUB_USERNAME/silent-skill-gap-backend:latest
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -29,9 +29,9 @@ services:
 
   - type: web
     name: silent_skill_gap_ml_service
-    env: docker
-    dockerContext: ./ml_service
-    dockerfilePath: ./ml_service/Dockerfile
+    env: image
+    image:
+      url: docker.io/abhishekkrnishad/silent-skill-gap-ml-service:latest
     plan: free
     envVars:
       - key: MODEL_PATH
