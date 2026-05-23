@@ -1,0 +1,73 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+# ==============================================================================
+# CI/CD WORKFLOW PROCESS:
+# GitHub Push -> GitHub Actions -> Docker Hub -> Render Auto Deploy
+#
+# 1. This pipeline automatically triggers on any push to the 'main' branch.
+# 2. It builds Docker images for both the 'backend' and 'ml_service'.
+# 3. It securely logs into Docker Hub and pushes the latest images.
+# 4. It triggers Render to pull the latest images and redeploy via Deploy Hooks.
+#
+# REQUIRED GITHUB SECRETS (Configure these in your GitHub repository Settings > Secrets and variables > Actions):
+# - DOCKER_USERNAME: Your Docker Hub username (used for login and image tagging)
+# - DOCKER_PASSWORD: Your Docker Hub password or Personal Access Token (PAT)
+# - RENDER_DEPLOY_HOOK_BACKEND: The 'Deploy Hook' URL for the backend service (Found in Render Dashboard > Settings)
+# - RENDER_DEPLOY_HOOK_ML_SERVICE: The 'Deploy Hook' URL for the ml_service (Found in Render Dashboard > Settings)
+# ==============================================================================
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/silent-skill-gap-backend:latest
+
+      - name: Build and Push ML Service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ml_service
+          file: ./ml_service/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/silent-skill-gap-ml-service:latest
+
+  deploy-to-render:
+    name: Deploy to Render Production
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Backend Deployment
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}" ]; then
+            echo "Error: RENDER_DEPLOY_HOOK_BACKEND secret is not set!"
+            exit 1
+          fi
+          curl -s -X GET "${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}"
+
+      - name: Trigger ML Service Deployment
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_ML_SERVICE }}" ]; then
+            echo "Error: RENDER_DEPLOY_HOOK_ML_SERVICE secret is not set!"
+            exit 1
+          fi
+          curl -s -X GET "${{ secrets.RENDER_DEPLOY_HOOK_ML_SERVICE }}"
