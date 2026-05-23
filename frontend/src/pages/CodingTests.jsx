@@ -17,7 +17,14 @@ export default function CodingTests() {
     const fetchTests = async () => {
         try {
             const res = await api.get('/shared/coding-tests/');
-            setTests(res.data);
+            const data = res.data;
+            if (Array.isArray(data)) {
+                setTests(data);
+            } else if (data && Array.isArray(data.results)) {
+                setTests(data.results);
+            } else {
+                setTests([]);
+            }
         } catch (error) {
             console.error("Failed to fetch coding tests", error);
             // Mock data

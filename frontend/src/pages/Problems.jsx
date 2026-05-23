@@ -18,7 +18,14 @@ export default function Problems() {
         try {
             // Simulated API call if backend isn't ready, but let's try real first
             const res = await api.get('/shared/problems/');
-            setProblems(res.data);
+            const data = res.data;
+            if (Array.isArray(data)) {
+                setProblems(data);
+            } else if (data && Array.isArray(data.results)) {
+                setProblems(data.results);
+            } else {
+                setProblems([]);
+            }
         } catch (error) {
             console.error("Failed to fetch problems", error);
             // Fallback mock data for visual presentation if DB is empty/failing
