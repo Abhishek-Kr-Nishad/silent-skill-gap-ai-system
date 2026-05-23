@@ -109,16 +109,16 @@ export default function Login() {
                             </div>
                         )}
                         <div>
-                            <label className="block text-sm font-bold text-light-muted dark:text-dark-muted mb-2 uppercase tracking-wider">Email Address</label>
+                            <label className="block text-sm font-bold text-light-muted dark:text-dark-muted mb-2 uppercase tracking-wider">Email or Username</label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <Mail className="h-5 w-5 text-light-muted dark:text-dark-muted group-focus-within:text-brand-500 transition-colors" />
                                 </div>
                                 <input
-                                    type="email"
+                                    type="text"
                                     required
                                     className="input-premium pl-12 h-14"
-                                    placeholder="name@company.com"
+                                    placeholder="name@company.com or johndoe123"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
