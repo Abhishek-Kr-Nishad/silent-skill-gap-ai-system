@@ -65,10 +65,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR}/db.sqlite3")
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL', 'mysql://Abhishek21_18:544921@@127.0.0.1:3306/silent_skill_gap')
-    )
+    "default": dj_database_url.parse(DATABASE_URL)
 }
 
 AUTH_USER_MODEL = 'core.User'
