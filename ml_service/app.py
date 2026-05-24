@@ -6,7 +6,7 @@ from predict import get_predictions_and_explanations
 from analyzer import analyze_resume, extract_text_from_file
 from rag_pipeline import ingest_document, query_rag
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import uvicorn
 
