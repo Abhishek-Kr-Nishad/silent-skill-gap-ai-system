@@ -11,7 +11,7 @@ def get_embeddings():
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable is not set")
-    return GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
+    return GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
 
 def get_or_create_vectorstore():
     global _vectorstore
