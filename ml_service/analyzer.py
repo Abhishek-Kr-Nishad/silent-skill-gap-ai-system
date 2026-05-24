@@ -2,22 +2,23 @@ import io
 import re
 from pdfminer.high_level import extract_text
 from docx import Document
-import spacy
-from sentence_transformers import SentenceTransformer, util
-import numpy as np
+import os
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-# Load NLP Models (Global variables to be loaded once)
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    import subprocess
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    nlp = spacy.load("en_core_web_sm")
+# Initialize Gemini Embeddings lazily
+_embeddings_model = None
 
-print("Loading Sentence Transformer model...")
-# Using a small and fast model for semantic similarity
-similarity_model = SentenceTransformer('all-MiniLM-L6-v2')
-print("Model loaded successfully.")
+def get_embeddings_model():
+    global _embeddings_model
+    if _embeddings_model is None:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is not set")
+        _embeddings_model = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-001", 
+            google_api_key=api_key
+        )
+    return _embeddings_model
 
 # A static list of common tech skills to look for in resumes
 TECH_SKILLS = set([
@@ -55,9 +56,8 @@ def extract_skills(text):
     # In a production system, this could use a custom trained Spacy NER model
     found_skills = set()
     
-    # Tokenize with spacy to handle word boundaries properly
-    doc = nlp(text)
-    tokens = [token.text for token in doc]
+    # Spacy tokenization removed for lightweight processing
+    # Direct substring and word boundary regex matching handles the required skill extraction
     
     for skill in TECH_SKILLS:
         if skill in text:
@@ -81,11 +81,22 @@ def calculate_ats_score(resume_text, target_role, extracted_skills):
     
     # Calculate Semantic Similarity between whole resume and target role title
     # This represents how closely the resume aligns with the role overall
-    resume_emb = similarity_model.encode(resume_text[:2000]) # Truncate to first 2000 chars for speed
-    role_emb = similarity_model.encode(target_role_desc)
-    
-    similarity = util.cos_sim(resume_emb, role_emb).item()
-    
+    try:
+        embeddings = get_embeddings_model()
+        # Truncate to first 2000 chars to avoid API limits and improve speed
+        resume_emb = embeddings.embed_query(resume_text[:2000])
+        role_emb = embeddings.embed_query(target_role_desc)
+        
+        # Calculate cosine similarity using pure Python/numpy since embeddings are lists
+        import numpy as np
+        vec1 = np.array(resume_emb)
+        vec2 = np.array(role_emb)
+        similarity = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+    except Exception as e:
+        print(f"Error calling Gemini Embeddings: {e}")
+        # Fallback similarity if API fails
+        similarity = 0.5
+        
     # Map similarity [-1, 1] to a score [0, 50]
     semantic_score = max(0, min(50, (similarity * 50) + 20))
     

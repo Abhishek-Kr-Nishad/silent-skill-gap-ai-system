@@ -2,36 +2,34 @@ import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from sentence_transformers import SentenceTransformer
-import numpy as np
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-# Use SentenceTransformers directly for FAISS embedding function to avoid relying on external API for embeddings
-class LocalHuggingFaceEmbeddings:
-    def __init__(self, model_name="all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(model_name)
-    
-    def embed_documents(self, texts):
-        embeddings = self.model.encode(texts)
-        return embeddings.tolist()
-        
-    def embed_query(self, text):
-        embedding = self.model.encode([text])[0]
-        return embedding.tolist()
-
-embeddings_model = LocalHuggingFaceEmbeddings()
 FAISS_INDEX_PATH = "faiss_index"
+_vectorstore = None
+
+def get_embeddings():
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY environment variable is not set")
+    return GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
 
 def get_or_create_vectorstore():
+    global _vectorstore
+    if _vectorstore is not None:
+        return _vectorstore
+        
+    embeddings_model = get_embeddings()
     if os.path.exists(FAISS_INDEX_PATH):
         try:
-            return FAISS.load_local(FAISS_INDEX_PATH, embeddings_model, allow_dangerous_deserialization=True)
+            _vectorstore = FAISS.load_local(FAISS_INDEX_PATH, embeddings_model, allow_dangerous_deserialization=True)
+            return _vectorstore
         except Exception as e:
             print(f"Error loading FAISS index: {e}. Creating new one.")
-            return FAISS.from_texts(["Initial document to create schema"], embeddings_model)
+            _vectorstore = FAISS.from_texts(["Initial document to create schema"], embeddings_model)
+            return _vectorstore
     else:
-        return FAISS.from_texts(["Initial document to create schema"], embeddings_model)
-
-vectorstore = get_or_create_vectorstore()
+        _vectorstore = FAISS.from_texts(["Initial document to create schema"], embeddings_model)
+        return _vectorstore
 
 def ingest_document(text: str, metadata: dict = None):
     """
@@ -50,6 +48,7 @@ def ingest_document(text: str, metadata: dict = None):
     
     documents = [Document(page_content=chunk, metadata=metadata) for chunk in chunks]
     
+    vectorstore = get_or_create_vectorstore()
     vectorstore.add_documents(documents)
     vectorstore.save_local(FAISS_INDEX_PATH)
     
@@ -59,6 +58,7 @@ def query_rag(query: str, top_k: int = 4):
     """
     Retrieves the most relevant chunks from the FAISS database.
     """
+    vectorstore = get_or_create_vectorstore()
     docs = vectorstore.similarity_search(query, k=top_k)
     
     # Format the context for the LLM prompt
