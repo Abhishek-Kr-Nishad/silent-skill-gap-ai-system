@@ -16,8 +16,24 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Superuser credentials not fully provided in environment. Skipping."))
             return
 
-        if User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
-            self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' or email '{email}' already exists."))
-        else:
-            User.objects.create_superuser(username=username, email=email, password=password)
-            self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' created successfully!"))
+        try:
+            user = User.objects.get(username=username)
+            user.is_staff = True
+            user.is_superuser = True
+            user.set_password(password)
+            user.email = email
+            user.save()
+            self.stdout.write(self.style.SUCCESS(f"User '{username}' already exists. Upgraded to superuser and reset password successfully!"))
+        except User.DoesNotExist:
+            try:
+                # Try checking by email just in case
+                user = User.objects.get(email=email)
+                user.is_staff = True
+                user.is_superuser = True
+                user.set_password(password)
+                user.username = username
+                user.save()
+                self.stdout.write(self.style.SUCCESS(f"User with email '{email}' already exists. Upgraded to superuser and reset password successfully!"))
+            except User.DoesNotExist:
+                User.objects.create_superuser(username=username, email=email, password=password)
+                self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' created successfully!"))
