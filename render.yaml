@@ -18,6 +18,8 @@ services:
         value: "https://silent-skill-gap-frontend.onrender.com"
       - key: JWT_SECRET
         generateValue: true
+      - key: ML_SERVICE_URL
+        sync: false
 
   - type: web
     name: silent_skill_gap_ml_service
@@ -28,6 +30,8 @@ services:
     envVars:
       - key: MODEL_PATH
         value: "models/"
+      - key: GEMINI_API_KEY
+        sync: false
 
   - type: web
     name: silent_skill_gap_frontend
