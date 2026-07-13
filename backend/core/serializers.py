@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Profile, Course, Unit, Lesson, Enrollment, Quiz, CodingExam, QuizAttempt, CodingAttempt, SkillGapReport, Problem, Submission, CodingTest, TestQuestion, ChatHistory, UploadedDocument
+from .models import User, Profile, Course, Unit, Lesson, Enrollment, Quiz, CodingExam, QuizAttempt, CodingAttempt, SkillGapReport, Problem, Submission, CodingTest, TestQuestion, ChatHistory, UploadedDocument, ResumeReport
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -102,3 +102,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['first_name'] = user.first_name
         token['last_name'] = user.last_name
         return token
+
+class ResumeReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeReport
+        fields = '__all__'
+        read_only_fields = ['user']
+

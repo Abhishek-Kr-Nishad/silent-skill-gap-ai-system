@@ -44,4 +44,23 @@ urlpatterns = [
     path('shared/ai-chat/', AIChatView.as_view(), name='ai-chat'),
     path('shared/ai-code-review/', AICodeReviewView.as_view(), name='ai-code-review'),
     path('shared/generate-interview/', AIGenerateInterviewView.as_view(), name='generate-interview'),
+    
+    # AI-Powered ATS Resume Analyzer Coach Endpoints
+    path('resume/upload', ResumeUploadView.as_view(), name='resume-upload'),
+    path('resume/upload/', ResumeUploadView.as_view(), name='resume-upload-slash'),
+    path('resume/job-description', JobDescriptionUploadView.as_view(), name='resume-jd'),
+    path('resume/job-description/', JobDescriptionUploadView.as_view(), name='resume-jd-slash'),
+    path('resume/analyze', ResumeAnalyzeView.as_view(), name='resume-analyze'),
+    path('resume/analyze/', ResumeAnalyzeView.as_view(), name='resume-analyze-slash'),
+    path('resume/improve', ResumeImproveView.as_view(), name='resume-improve'),
+    path('resume/improve/', ResumeImproveView.as_view(), name='resume-improve-slash'),
+    path('resume/rewrite', ResumeRewriteView.as_view(), name='resume-rewrite'),
+    path('resume/rewrite/', ResumeRewriteView.as_view(), name='resume-rewrite-slash'),
+    path('resume/history', ResumeHistoryView.as_view(), name='resume-history'),
+    path('resume/history/', ResumeHistoryView.as_view(), name='resume-history-slash'),
+    path('resume/report/<int:pk>', ResumeReportDetailView.as_view(), name='resume-report-detail'),
+    path('resume/report/<int:pk>/', ResumeReportDetailView.as_view(), name='resume-report-detail-slash'),
+    path('resume/report/<int:pk>/download-pdf', ResumeReportPDFDownloadView.as_view(), name='resume-report-pdf'),
+    path('resume/report/<int:pk>/download-docx', ResumeReportDOCXDownloadView.as_view(), name='resume-report-docx'),
 ]
+

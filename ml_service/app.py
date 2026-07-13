@@ -9,6 +9,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import uvicorn
+from ats_analyzer import analyze_ats_resume, improve_bullet_point, rewrite_resume_variations
+
 
 app = FastAPI(title="Silent Skill Gap AI - ML Service")
 
@@ -168,5 +170,58 @@ async def generate_interview(req: InterviewPrepRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==========================================
+# ATS Resume Coach Endpoints
+# ==========================================
+
+class AnalyzeAtsRequest(BaseModel):
+    resume_text: str
+    jd_text: Optional[str] = ""
+    target_role: Optional[str] = "Software Engineer"
+
+class ImproveBulletRequest(BaseModel):
+    text: str
+    type: str = "experience"
+    jd_text: Optional[str] = ""
+
+class RewriteResumeRequest(BaseModel):
+    resume_text: str
+    jd_text: Optional[str] = ""
+    target_role: Optional[str] = "Software Engineer"
+
+@app.post("/extract-text")
+async def extract_text_endpoint(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        text = extract_text_from_file(contents, file.filename)
+        return {"text": text, "filename": file.filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Text extraction failed: {str(e)}")
+
+@app.post("/analyze-ats")
+async def analyze_ats_endpoint(req: AnalyzeAtsRequest):
+    try:
+        result = analyze_ats_resume(req.resume_text, req.jd_text, req.target_role)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ATS analysis failed: {str(e)}")
+
+@app.post("/improve-bullet")
+async def improve_bullet_endpoint(req: ImproveBulletRequest):
+    try:
+        result = improve_bullet_point(req.text, req.type, req.jd_text)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Bullet point improvement failed: {str(e)}")
+
+@app.post("/rewrite-resume")
+async def rewrite_resume_endpoint(req: RewriteResumeRequest):
+    try:
+        result = rewrite_resume_variations(req.resume_text, req.jd_text, req.target_role)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Resume rewrite failed: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
+

@@ -142,3 +142,14 @@ class ChatHistory(models.Model):
     response = models.TextField()
     context_used = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+class ResumeReport(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='resume_reports')
+    resume_name = models.CharField(max_length=255)
+    target_role = models.CharField(max_length=255, blank=True, null=True)
+    job_description = models.TextField(blank=True, null=True)
+    ats_score = models.IntegerField(default=0)
+    report_data = models.JSONField(default=dict)
+    rewritten_resumes = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
