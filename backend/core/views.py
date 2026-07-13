@@ -221,8 +221,8 @@ class AIChatView(views.APIView):
         chat_url = f"{ml_url}/chat"
         
         try:
-            # We skip sending history for now to keep it simple, but we could pass it
-            res = requests.post(chat_url, json={"message": message}, timeout=15)
+            # Increased timeout to 60s for RAG + LLM response
+            res = requests.post(chat_url, json={"message": message}, timeout=60)
             
             if res.status_code == 200:
                 data = res.json()
@@ -258,11 +258,12 @@ class AICodeReviewView(views.APIView):
         review_url = f"{ml_url}/code-review"
         
         try:
+            # Increased timeout to 60s for Code Review
             res = requests.post(review_url, json={
                 "code": code,
                 "language": language,
                 "problem_statement": problem_statement or "Unknown problem"
-            }, timeout=15)
+            }, timeout=60)
             
             if res.status_code == 200:
                 return Response(res.json(), status=status.HTTP_200_OK)
@@ -287,11 +288,12 @@ class AIGenerateInterviewView(views.APIView):
         url = f"{ml_url}/generate-interview"
         
         try:
+            # Increased timeout to 60s for Interview Prep
             res = requests.post(url, json={
                 "target_role": target_role,
                 "resume_skills": resume_skills,
                 "weak_skills": weak_skills
-            }, timeout=20)
+            }, timeout=60)
             
             if res.status_code == 200:
                 return Response(res.json(), status=status.HTTP_200_OK)
@@ -514,7 +516,8 @@ class ResumeUploadView(views.APIView):
         
         try:
             files = {'file': (file_obj.name, file_obj.read(), file_obj.content_type)}
-            res = requests.post(extract_url, files=files, timeout=30)
+            # Increased timeout to 60s for file text extraction
+            res = requests.post(extract_url, files=files, timeout=60)
             
             if res.status_code == 200:
                 data = res.json()
@@ -545,7 +548,8 @@ class JobDescriptionUploadView(views.APIView):
             extract_url = f"{ml_url}/extract-text"
             try:
                 files = {'file': (file_obj.name, file_obj.read(), file_obj.content_type)}
-                res = requests.post(extract_url, files=files, timeout=30)
+                # Increased timeout to 60s for JD file extraction
+                res = requests.post(extract_url, files=files, timeout=60)
                 if res.status_code == 200:
                     jd_text = res.json().get("text", "")
                 else:
@@ -615,11 +619,12 @@ class ResumeImproveView(views.APIView):
         improve_url = f"{ml_url}/improve-bullet"
         
         try:
+            # Increased timeout to 60s for bullet improvement
             res = requests.post(improve_url, json={
                 "text": text,
                 "type": improve_type,
                 "jd_text": jd_text
-            }, timeout=30)
+            }, timeout=60)
             
             if res.status_code == 200:
                 return Response(res.json(), status=status.HTTP_200_OK)
